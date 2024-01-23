@@ -28,7 +28,7 @@ interface IAppealFormErrors {
 
 
 const phoneImask = ref<typeof IMask | null>(null)
-const phoneElement = ref<HTMLElement | null>(null)
+const phoneElement = ref<HTMLInputElement | null>(null)
 const formData = ref<IAppealFormData>({
   name: null,
   phone: null,
@@ -55,7 +55,7 @@ onMounted(() => {
   }
 })
 
-const submitForm = async (e) => {
+const submitForm = async (e : Event) => {
   e.preventDefault()
   try {
     const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/appeals`, formData.value)
@@ -68,10 +68,11 @@ const submitForm = async (e) => {
         break;
       default: alert("Ошибка отправки формы");
     }
-  } catch (e : AxiosError) {
-    // console.log()
+  } catch (e) {
+    // @ts-ignore
     switch (e.response.status) {
       case 422:
+        // @ts-ignore
         formErrors.value = e.response.data.errors
         break;
       default:     alert("Ошибка соединения! Попробуйте позже");
@@ -80,12 +81,16 @@ const submitForm = async (e) => {
 }
 
 const setPhoneValue = () => {
-  formData.value.phone = phoneImask.value.unmaskedValue
+  if(!phoneImask.value) return;
+  // @ts-ignore
+  formData.value.phone = phoneImask.value?.unmaskedValue
 }
 
 const clearPhoneMask = () => {
+  if(!phoneElement.value) return;
   phoneElement.value.value = "";
-  phoneImask.value.updateValue();
+  // @ts-ignore
+  phoneImask.value?.updateValue();
 }
 
 const setFormDataInitialState = () => {

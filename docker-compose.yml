@@ -1,0 +1,58 @@
+version: '3.5'
+services:
+  #Nginx Service
+  kv-nginx:
+    image: nginx:alpine
+    build:
+      context: ./docker/nginx/
+      dockerfile: ./Dockerfile
+    container_name: kv-nginx
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./backend:/var/www/backend:ro,cached
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - kv-backend
+    ports:
+      - "8088:80"
+    networks:
+      - kv-network
+
+  #PHP Laravel Service
+  kv-backend:
+    image: ac-backend
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: kv-backend
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: kv-backend
+      SERVICE_TAGS: dev
+    volumes:
+      - ./backend:/var/www/backend/
+      - ./backend/.env:/var/www/backend/.env
+      - ./appeals:/var/www/backend/storage/appeals
+    networks:
+      - kv-network
+
+  kv-frontend:
+    container_name: kv-frontend
+    image: ac-frontend
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+    volumes:
+      - /node_modules
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env.production
+    networks:
+      - kv-network
+
+#Docker Networks
+networks:
+  kv-network:
+    driver: bridge
